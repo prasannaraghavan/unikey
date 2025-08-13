@@ -67,6 +67,10 @@ int main(int argc, char* argv[])
     /* Workaround for QTBUG-40332 - "High ping when QNetworkAccessManager is instantiated" */
     ::setenv ("QT_BEARER_POLL_TIMEOUT", "-1", 1);
 #endif
+	// Qt6 Windows DPI handling
+	QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+	QCoreApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
+	
 	QCoreApplication::setOrganizationName("Debauchee");
 	QCoreApplication::setOrganizationDomain("github.com");
 	QCoreApplication::setApplicationName("Barrier");

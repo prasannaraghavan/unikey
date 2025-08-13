@@ -25,7 +25,14 @@
 #include <QMessageBox>
 #define _MSL_STDINT_H
 #include <stdint.h>
+
+#if defined(Q_OS_WIN)
+// DNS SD support is optional on Windows
+#define BARRIER_USE_DNSSD 0
+#else
+#define BARRIER_USE_DNSSD 1
 #include <dns_sd.h>
+#endif
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -53,7 +60,7 @@ static void silence_avahi_warning()
     const char *name  = "AVAHI_COMPAT_NOWARN";
     const char *value = "1";
 #ifdef _WIN32
-    SetEnvironmentVariable(name, value);
+    SetEnvironmentVariableA(name, value);
 #else
     setenv(name, value, 1);
 #endif

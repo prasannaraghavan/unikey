@@ -19,6 +19,8 @@
 
 #include <QtCore/QSocketNotifier>
 
+#if BARRIER_USE_DNSSD
+
 ZeroconfRegister::ZeroconfRegister(QObject* parent) :
     QObject(parent),
     m_DnsServiceRef(0),
@@ -83,7 +85,7 @@ void ZeroconfRegister::socketReadyRead()
     }
 }
 
-void ZeroconfRegister::registerService(DNSServiceRef, DNSServiceFlags,
+void ZeroconfRegister::registerServiceCallback(DNSServiceRef, DNSServiceFlags,
         DNSServiceErrorType errorCode, const char* name, const char* regtype,
         const char* domain, void* data)
 {
@@ -92,3 +94,32 @@ void ZeroconfRegister::registerService(DNSServiceRef, DNSServiceFlags,
         emit serviceRegister->error(errorCode);
     }
 }
+
+#else
+
+// Stub implementation for Windows without DNS SD support
+ZeroconfRegister::ZeroconfRegister(QObject* parent) :
+    QObject(parent)
+{
+}
+
+ZeroconfRegister::~ZeroconfRegister()
+{
+}
+
+void ZeroconfRegister::registerService(const ZeroconfRecord&, quint16)
+{
+    // No-op on Windows without DNS SD
+}
+
+void ZeroconfRegister::socketReadyRead()
+{
+    // No-op on Windows without DNS SD
+}
+
+void ZeroconfRegister::registerServiceCallback(void*, int, int, const char*, const char*, const char*, void*)
+{
+    // No-op on Windows without DNS SD
+}
+
+#endif // BARRIER_USE_DNSSD

@@ -28,8 +28,15 @@ class QSocketNotifier;
 #include <stdint.h>
 #if defined(Q_OS_WIN)
 #define WIN32_LEAN_AND_MEAN
+// DNS SD support is optional on Windows
+#define BARRIER_USE_DNSSD 0
+#else
+#define BARRIER_USE_DNSSD 1
 #endif
+
+#if BARRIER_USE_DNSSD
 #include <dns_sd.h>
+#endif
 
 class ZeroconfRegister : public QObject
 {
@@ -43,19 +50,30 @@ public:
     inline ZeroconfRecord registeredRecord() const { return finalRecord; }
 
 signals:
-    void error(DNSServiceErrorType error);
+    void error(int error);
     void serviceRegistered(const ZeroconfRecord& record);
 
 private slots:
     void socketReadyRead();
 
 private:
-    static void DNSSD_API registerService(DNSServiceRef sdRef,
-        DNSServiceFlags, DNSServiceErrorType errorCode, const char* name,
+#if BARRIER_USE_DNSSD
+    static void registerServiceCallback(DNSServiceRef sdRef,
+        DNSServiceFlags flags, DNSServiceErrorType errorCode, const char* name,
         const char* regtype, const char* domain, void* context);
+#else
+    static void registerServiceCallback(void* sdRef,
+        int flags, int errorCode, const char* name,
+        const char* regtype, const char* domain, void* context);
+#endif
 
 private:
+#if BARRIER_USE_DNSSD
     DNSServiceRef m_DnsServiceRef;
     QSocketNotifier* m_pSocket;
+#else
+    void* m_DnsServiceRef;
+    void* m_pSocket;
+#endif
     ZeroconfRecord finalRecord;
 };

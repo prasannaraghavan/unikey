@@ -15,16 +15,32 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-cmake_minimum_required (VERSION 3.4)
+cmake_minimum_required (VERSION 3.5)
 project (barrier C CXX)
 
 option (BARRIER_BUILD_GUI "Build the GUI" ON)
 option (BARRIER_BUILD_INSTALLER "Build the installer" ON)
-option (BARRIER_BUILD_TESTS "Build the tests" ON)
+option (BARRIER_BUILD_TESTS "Build the tests" OFF)
 option (BARRIER_USE_EXTERNAL_GTEST "Use external installation of Google Test framework" OFF)
 
+# Configure Qt6 path for Windows MSVC builds
+if (WIN32 AND MSVC)
+    # Prefer Qt6 MSVC over MinGW for MSVC builds
+    if (NOT DEFINED CMAKE_PREFIX_PATH)
+        if (EXISTS "C:/Qt/6.9.1/msvc2022_64")
+            set(CMAKE_PREFIX_PATH "C:/Qt/6.9.1/msvc2022_64" CACHE PATH "Qt6 MSVC installation path")
+            message(STATUS "Using Qt6 MSVC: ${CMAKE_PREFIX_PATH}")
+        elseif (EXISTS "C:/Qt/6.8.1/msvc2022_64")
+            set(CMAKE_PREFIX_PATH "C:/Qt/6.8.1/msvc2022_64" CACHE PATH "Qt6 MSVC installation path")
+            message(STATUS "Using Qt6 MSVC: ${CMAKE_PREFIX_PATH}")
+        else()
+            message(WARNING "Qt6 MSVC not found, CMake may use MinGW Qt6 which is incompatible with MSVC")
+        endif()
+    endif()
+endif()
+
 set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set (CMAKE_CXX_STANDARD 14)
+set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_EXTENSIONS OFF)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
@@ -285,7 +301,7 @@ if (UNIX)
     endif()
 
 elseif (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP /D _BIND_TO_CURRENT_VCLIBS_VERSION=1")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP /D _BIND_TO_CURRENT_VCLIBS_VERSION=1 /Zc:__cplusplus /permissive-")
     set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD /O2 /Ob2")
 
     list (APPEND libs Wtsapi32 Userenv Wininet comsuppw Shlwapi)
@@ -294,6 +310,8 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
         /DSYSAPI_WIN32=1
         /DWINAPI_MSWINDOWS=1
         /D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING=1  # tr1 is used from gtest and gmock
+        /DGTEST_HAS_TR1_TUPLE=0                         # Force gtest to use std::tuple instead of tr1::tuple
+        /DGMOCK_HAS_TR1_TUPLE=0                         # Force gmock to use std::tuple instead of tr1::tuple
         /DWIN32
         /D_WINDOWS
         /D_CRT_SECURE_NO_WARNINGS

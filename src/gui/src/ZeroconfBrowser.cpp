@@ -20,14 +20,17 @@
 #include <QtCore/QSocketNotifier>
 
 ZeroconfBrowser::ZeroconfBrowser(QObject* parent) :
-    QObject(parent),
-    m_DnsServiceRef(0),
+    QObject(parent)
+#if BARRIER_USE_DNSSD
+    ,m_DnsServiceRef(0),
     m_pSocket(0)
+#endif
 {
 }
 
 ZeroconfBrowser::~ZeroconfBrowser()
 {
+#if BARRIER_USE_DNSSD
     if (m_pSocket) {
         delete m_pSocket;
     }
@@ -36,10 +39,12 @@ ZeroconfBrowser::~ZeroconfBrowser()
         DNSServiceRefDeallocate(m_DnsServiceRef);
         m_DnsServiceRef = 0;
     }
+#endif
 }
 
 void ZeroconfBrowser::browseForType(const QString& type)
 {
+#if BARRIER_USE_DNSSD
     DNSServiceErrorType err = DNSServiceBrowse(&m_DnsServiceRef, 0, 0,
         type.toUtf8().constData(), 0, browseReply, this);
 
@@ -57,16 +62,24 @@ void ZeroconfBrowser::browseForType(const QString& type)
                 SLOT(socketReadyRead()));
         }
     }
+#else
+    // Stub implementation when DNS SD is not available
+    m_BrowsingType = type;
+    emit error(-1); // Indicate that service discovery is not available
+#endif
 }
 
 void ZeroconfBrowser::socketReadyRead()
 {
+#if BARRIER_USE_DNSSD
     DNSServiceErrorType err = DNSServiceProcessResult(m_DnsServiceRef);
     if (err != kDNSServiceErr_NoError) {
         emit error(err);
     }
+#endif
 }
 
+#if BARRIER_USE_DNSSD
 void ZeroconfBrowser::browseReply(DNSServiceRef, DNSServiceFlags flags,
             quint32, DNSServiceErrorType errorCode, const char* serviceName,
             const char* regType, const char* replyDomain, void* context)
@@ -90,3 +103,4 @@ void ZeroconfBrowser::browseReply(DNSServiceRef, DNSServiceFlags flags,
         }
     }
 }
+#endif

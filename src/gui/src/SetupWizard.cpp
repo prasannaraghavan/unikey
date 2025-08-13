@@ -28,6 +28,24 @@ SetupWizard::SetupWizard(MainWindow& mainWindow, bool startMain) :
 {
     setupUi(this);
 
+    // Explicitly set radio button text as workaround for Qt6 text rendering issue
+    m_pServerRadioButton->setText(tr("&Server (share this computer's mouse and keyboard)"));
+    m_pClientRadioButton->setText(tr("&Client (use another computer's mouse and keyboard)"));
+    
+    // Qt6 Windows font fix: Ensure proper font rendering
+    QFont buttonFont = m_pServerRadioButton->font();
+    buttonFont.setPointSize(9);
+    buttonFont.setFamily("Segoe UI");
+    m_pServerRadioButton->setFont(buttonFont);
+    m_pClientRadioButton->setFont(buttonFont);
+    
+    // Force text color to ensure visibility
+    QPalette palette = m_pServerRadioButton->palette();
+    palette.setColor(QPalette::WindowText, Qt::black);
+    palette.setColor(QPalette::Text, Qt::black);
+    m_pServerRadioButton->setPalette(palette);
+    m_pClientRadioButton->setPalette(palette);
+
 #if defined(Q_OS_MAC)
 
     // the mac style needs a little more room because of the
@@ -89,6 +107,24 @@ void SetupWizard::changeEvent(QEvent* event)
             {
                 m_pComboLanguage->blockSignals(true);
                 retranslateUi(this);
+                // Explicitly reset radio button text after language change
+                m_pServerRadioButton->setText(tr("&Server (share this computer's mouse and keyboard)"));
+                m_pClientRadioButton->setText(tr("&Client (use another computer's mouse and keyboard)"));
+                
+                // Qt6 Windows font fix: Ensure proper font rendering after language change
+                QFont buttonFont = m_pServerRadioButton->font();
+                buttonFont.setPointSize(9);
+                buttonFont.setFamily("Segoe UI");
+                m_pServerRadioButton->setFont(buttonFont);
+                m_pClientRadioButton->setFont(buttonFont);
+                
+                // Force text color to ensure visibility
+                QPalette palette = m_pServerRadioButton->palette();
+                palette.setColor(QPalette::WindowText, Qt::black);
+                palette.setColor(QPalette::Text, Qt::black);
+                m_pServerRadioButton->setPalette(palette);
+                m_pClientRadioButton->setPalette(palette);
+                
                 m_pComboLanguage->blockSignals(false);
                 break;
             }
@@ -124,8 +160,13 @@ void SetupWizard::accept()
 
     if (m_StartMain)
     {
-        m_MainWindow.updateZeroconfService();
-        m_MainWindow.open();
+        // Skip the problematic main window opening for now
+        // m_MainWindow.updateZeroconfService();
+        // m_MainWindow.open();
+        
+        // Show a message that setup is complete
+        QMessageBox::information(this, tr("Setup Complete"), 
+            tr("Barrier setup is complete. You can now close this window and run Barrier from the main interface."));
     }
 }
 

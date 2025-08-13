@@ -1,6 +1,6 @@
-cmake_minimum_required (VERSION 3.4)
+cmake_minimum_required (VERSION 3.5)
 
-find_package (Qt5 REQUIRED COMPONENTS Core Widgets Network)
+find_package (Qt6 REQUIRED COMPONENTS Core Widgets Network)
 set (CMAKE_AUTOMOC ON)
 set (CMAKE_AUTORCC ON)
 set (CMAKE_AUTOUIC ON)
@@ -131,17 +131,25 @@ add_executable (barrier WIN32
 
 include_directories (./src)
 
-target_link_libraries(barrier net base io Qt5::Core Qt5::Widgets Qt5::Network ${OPENSSL_LIBS})
+target_link_libraries(barrier net base io Qt6::Core Qt6::Widgets Qt6::Network ${OPENSSL_LIBS})
 target_compile_definitions (barrier PRIVATE -DBARRIER_VERSION_STAGE="${BARRIER_VERSION_STAGE}")
 target_compile_definitions (barrier PRIVATE -DBARRIER_REVISION="${BARRIER_REVISION}")
 
 if (WIN32)
-    include_directories ($ENV{BONJOUR_SDK_HOME}/Include)
-    find_library (DNSSD_LIB dnssd.lib
-                  HINTS ENV BONJOUR_SDK_HOME
-                  PATH_SUFFIXES "Lib/x64")
+    # Try to find Bonjour SDK, but don't fail if not found
+    if(DEFINED ENV{BONJOUR_SDK_HOME})
+        include_directories ($ENV{BONJOUR_SDK_HOME}/Include)
+        find_library (DNSSD_LIB dnssd.lib
+                      HINTS ENV BONJOUR_SDK_HOME
+                      PATH_SUFFIXES "Lib/x64")
+    endif()
     set_target_properties (barrier PROPERTIES LINK_FLAGS "/NODEFAULTLIB:LIBCMT")
-    target_link_libraries (barrier ${DNSSD_LIB})
+    if (DNSSD_LIB)
+        target_link_libraries (barrier ${DNSSD_LIB})
+        target_compile_definitions(barrier PRIVATE -DHAVE_BONJOUR=1)
+    else()
+        message(STATUS "Bonjour SDK not found - building without network discovery features")
+    endif()
 elseif (APPLE)
     find_library(APPSERVICES_LIB ApplicationServices)
     target_link_libraries(barrier ${APPSERVICES_LIB})
@@ -177,5 +185,5 @@ if (BARRIER_BUILD_TESTS)
     add_test(guiunittests guiunittests)
 
     target_include_directories(guiunittests PUBLIC ../../ext)
-    target_link_libraries(guiunittests gtest gmock Qt5::Core Qt5::Widgets Qt5::Network ${libs})
+    target_link_libraries(guiunittests gtest gmock Qt6::Core Qt6::Widgets Qt6::Network ${libs})
 endif()

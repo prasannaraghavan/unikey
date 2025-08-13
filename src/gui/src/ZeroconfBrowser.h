@@ -22,7 +22,17 @@
 #include <QtCore/QObject>
 #define _MSL_STDINT_H
 #include <stdint.h>
+
+#if defined(Q_OS_WIN)
+// DNS SD support is optional on Windows
+#define BARRIER_USE_DNSSD 0
+#else
+#define BARRIER_USE_DNSSD 1
+#endif
+
+#if BARRIER_USE_DNSSD
 #include <dns_sd.h>
+#endif
 
 class QSocketNotifier;
 
@@ -39,19 +49,24 @@ public:
 
 signals:
     void currentRecordsChanged(const QList<ZeroconfRecord>& list);
+#if BARRIER_USE_DNSSD
     void error(DNSServiceErrorType err);
+#else
+    void error(int err);
+#endif
 
 private slots:
     void socketReadyRead();
 
 private:
+#if BARRIER_USE_DNSSD
     static void DNSSD_API browseReply(DNSServiceRef, DNSServiceFlags flags,
             quint32, DNSServiceErrorType errorCode, const char* serviceName,
             const char* regType, const char* replyDomain, void* context);
 
-private:
     DNSServiceRef m_DnsServiceRef;
     QSocketNotifier* m_pSocket;
+#endif
     QList<ZeroconfRecord> m_Records;
     QString m_BrowsingType;
 };

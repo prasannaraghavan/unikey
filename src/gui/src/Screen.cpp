@@ -20,6 +20,9 @@
 
 #include <QtCore>
 #include <QtGui>
+#include <iostream>
+
+using std::endl;
 
 Screen::Screen() :
     m_Pixmap(QPixmap(":res/icons/64x64/video-display.png")),
@@ -91,19 +94,19 @@ void Screen::saveSettings(QSettings& settings) const
 
 QTextStream& Screen::writeScreensSection(QTextStream& outStream) const
 {
-    outStream << "\t" << name() << ":" << endl;
+    outStream << "\t" << name() << ":" << Qt::endl;
 
     for (int i = 0; i < modifiers().size(); i++) {
         auto mod = static_cast<Modifier>(i);
         if (modifier(mod) != mod) {
             outStream << "\t\t" << modifierName(mod) << " = " << modifierName(modifier(mod))
-                      << endl;
+                      << Qt::endl;
         }
     }
 
     for (int i = 0; i < fixes().size(); i++) {
         auto fix = static_cast<Fix>(i);
-        outStream << "\t\t" << fixName(fix) << " = " << (fixes()[i] ? "true" : "false") << endl;
+        outStream << "\t\t" << fixName(fix) << " = " << (fixes()[i] ? "true" : "false") << Qt::endl;
     }
 
     outStream << "\t\t" << "switchCorners = none ";
@@ -112,9 +115,9 @@ QTextStream& Screen::writeScreensSection(QTextStream& outStream) const
             outStream << "+" << switchCornerName(static_cast<SwitchCorner>(i)) << " ";
         }
     }
-    outStream << endl;
+    outStream << Qt::endl;
 
-    outStream << "\t\t" << "switchCornerSize = " << switchCornerSize() << endl;
+    outStream << "\t\t" << "switchCornerSize = " << switchCornerSize() << Qt::endl;
 
     return outStream;
 }
@@ -123,10 +126,10 @@ QTextStream& Screen::writeAliasesSection(QTextStream& outStream) const
 {
     if (!aliases().isEmpty())
     {
-        outStream << "\t" << name() << ":" << endl;
+        outStream << "\t" << name() << ":" << Qt::endl;
 
         for (const QString& alias : aliases()) {
-            outStream << "\t\t" << alias << endl;
+            outStream << "\t\t" << alias << Qt::endl;
         }
     }
 

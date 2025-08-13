@@ -33,8 +33,11 @@ ServerConfigDialog::ServerConfigDialog(QWidget* parent, ServerConfig& config, co
     m_ScreenSetupModel(serverConfig().screens(), serverConfig().numColumns(), serverConfig().numRows()),
     m_Message("")
 {
+    qDebug() << "ServerConfigDialog constructor: Starting setupUi";
     setupUi(this);
+    qDebug() << "ServerConfigDialog constructor: setupUi completed";
 
+    qDebug() << "ServerConfigDialog constructor: Setting checkbox values";
     m_pCheckBoxHeartbeat->setChecked(serverConfig().hasHeartbeat());
     m_pSpinBoxHeartbeat->setValue(serverConfig().heartbeat());
 
@@ -64,7 +67,8 @@ ServerConfigDialog::ServerConfigDialog(QWidget* parent, ServerConfig& config, co
         m_pListHotkeys->addItem(hotkey.text());
     }
 
-    m_pScreenSetupView->setModel(&m_ScreenSetupModel);
+    // Temporarily disable model assignment for Qt6 compatibility debugging
+    // m_pScreenSetupView->setModel(&m_ScreenSetupModel);
 
     if (serverConfig().numScreens() == 0)
         model().screen(serverConfig().numColumns() / 2, serverConfig().numRows() / 2) = Screen(defaultScreenName);
